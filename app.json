@@ -1,25 +1,64 @@
 {
   "expo": {
-    "name": "mojster",
+    "name": "Mojster",
     "slug": "mojster",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "scheme": "mojster",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#E85D04"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "si.mojster.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Mojster potrebuje kamero za fotografije del.",
+        "NSPhotoLibraryUsageDescription": "Mojster potrebuje dostop do galerije za fotografije del.",
+        "NSPhotoLibraryAddUsageDescription": "Mojster shrani fotografije del."
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#E85D04",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
+      "package": "si.mojster.app",
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES"
+      ],
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Dovoli Mojster dostop do fotografij za objavo del.",
+          "cameraPermission": "Dovoli Mojster uporabo kamere za fotografije del."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": false
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      }
     }
   }
 }
