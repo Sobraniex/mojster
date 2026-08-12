@@ -17,11 +17,13 @@ import { Button } from '../src/components/Button';
 import { Input } from '../src/components/Input';
 import { useApp } from '../src/context/AppContext';
 import { CATEGORIES } from '../src/data/categories';
+import { useI18n } from '../src/i18n/I18nContext';
 import { colors, radius, spacing } from '../src/theme/colors';
 
 export default function PostJobScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ categoryId?: string }>();
+  const { t } = useI18n();
   const { createJob, currentUser } = useApp();
 
   const [categoryId, setCategoryId] = useState(params.categoryId ?? '');
@@ -37,7 +39,7 @@ export default function PostJobScreen() {
   async function pickImages() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Dovoljenje', 'Za fotografije del potrebujemo dostop do galerije.');
+      Alert.alert(t.permission, t.permGallery);
       return;
     }
 
@@ -57,7 +59,7 @@ export default function PostJobScreen() {
   async function takePhoto() {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Dovoljenje', 'Za fotografije del potrebujemo kamero.');
+      Alert.alert(t.permission, t.permCamera);
       return;
     }
 
@@ -70,13 +72,13 @@ export default function PostJobScreen() {
 
   function validate() {
     const e: Record<string, string> = {};
-    if (!categoryId) e.categoryId = 'Izberite storitev';
-    if (!title.trim()) e.title = 'Vnesite naslov';
+    if (!categoryId) e.categoryId = 't.pickService';
+    if (!title.trim()) e.title = t.errTitle;
     if (!description.trim() || description.trim().length < 20) {
-      e.description = 'Opis naj bo vsaj 20 znakov';
+      e.description = t.errDescription;
     }
-    if (!location.trim()) e.location = 'Vnesite lokacijo';
-    if (!city.trim()) e.city = 'Vnesite mesto';
+    if (!location.trim()) e.location = t.errLocation;
+    if (!city.trim()) e.city = t.errCity;
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -96,7 +98,7 @@ export default function PostJobScreen() {
       });
       router.replace(`/job/${job.id}`);
     } catch {
-      Alert.alert('Napaka', 'Objave ni bilo mogoče shraniti.');
+      Alert.alert(t.error, t.errSave);
     } finally {
       setLoading(false);
     }
@@ -115,10 +117,10 @@ export default function PostJobScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.hint}>
-          Opis in fotografije. Cene ni na objavi — mojstri pošljejo ponudbe v app-u, dogovor sklenete tam.
+          {t.postHint}
         </Text>
 
-        <Text style={styles.label}>Vrsta storitve</Text>
+        <Text style={styles.label}>{t.serviceType}</Text>
         <View style={styles.catGrid}>
           {visibleCats.map((c) => {
             const selected = categoryId === c.id;
@@ -137,21 +139,21 @@ export default function PostJobScreen() {
         </View>
         <Pressable onPress={() => setShowAllCats((v) => !v)} style={styles.more}>
           <Text style={styles.moreText}>
-            {showAllCats ? 'Pokaži manj' : `Vse storitve (${CATEGORIES.length})`}
+            {showAllCats ? t.showLess : `${t.allServices} (${CATEGORIES.length})`}
           </Text>
         </Pressable>
         {errors.categoryId ? <Text style={styles.error}>{errors.categoryId}</Text> : null}
 
         <Input
-          label="Naslov"
-          placeholder="npr. Barvanje dnevne sobe"
+          label={t.jobTitle}
+          placeholder={t.jobTitlePh}
           value={title}
           onChangeText={setTitle}
           error={errors.title}
         />
         <Input
-          label="Opis"
-          placeholder="Kaj točno potrebujete? Dimenzije, materiali, dostop…"
+          label={t.description}
+          placeholder={t.descriptionPh}
           value={description}
           onChangeText={setDescription}
           multiline
@@ -160,28 +162,28 @@ export default function PostJobScreen() {
           error={errors.description}
         />
         <Input
-          label="Lokacija"
-          placeholder="npr. Bežigrad"
+          label={t.location}
+          placeholder={t.locationPh}
           value={location}
           onChangeText={setLocation}
           error={errors.location}
         />
         <Input
-          label="Mesto"
-          placeholder="npr. Ljubljana"
+          label={t.city}
+          placeholder={t.cityPh}
           value={city}
           onChangeText={setCity}
           error={errors.city}
         />
 
         <View style={styles.dealBox}>
-          <Text style={styles.dealTitle}>Dogovor v aplikaciji</Text>
+          <Text style={styles.dealTitle}>{t.dealBoxTitle}</Text>
           <Text style={styles.dealText}>
-            Na objavi ni cene. Mojstri vam pošljejo ponudbe; vi sprejmete tisto, ki vam ustreza.
+            {t.dealBoxText}
           </Text>
         </View>
 
-        <Text style={styles.label}>Fotografije · do 5</Text>
+        <Text style={styles.label}>{t.photos}</Text>
         <View style={styles.photoRow}>
           {photos.map((uri) => (
             <View key={uri} style={styles.photoWrap}>
@@ -198,18 +200,18 @@ export default function PostJobScreen() {
             <>
               <Pressable style={styles.photoAdd} onPress={pickImages}>
                 <Ionicons name="images-outline" size={20} color={colors.ink} />
-                <Text style={styles.photoAddText}>Galerija</Text>
+                <Text style={styles.photoAddText}>{t.gallery}</Text>
               </Pressable>
               <Pressable style={styles.photoAdd} onPress={takePhoto}>
                 <Ionicons name="camera-outline" size={20} color={colors.ink} />
-                <Text style={styles.photoAddText}>Kamera</Text>
+                <Text style={styles.photoAddText}>{t.camera}</Text>
               </Pressable>
             </>
           ) : null}
         </View>
 
         <Button
-          title="Objavi delo"
+          title={t.publishJob}
           onPress={handleSubmit}
           loading={loading}
           fullWidth

@@ -1,23 +1,34 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useMemo } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { Button } from '../../src/components/Button';
 import { EmptyState } from '../../src/components/EmptyState';
 import { JobCard } from '../../src/components/JobCard';
 import { useApp } from '../../src/context/AppContext';
 import { getCategoryById } from '../../src/data/categories';
+import { useI18n } from '../../src/i18n/I18nContext';
 import { colors, radius, spacing } from '../../src/theme/colors';
 
 export default function CategoryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { getOpenJobs, getOffersForJob } = useApp();
+  const { t } = useI18n();
+  const { getOpenJobs, getMyJobs, getOffersForJob, isWorkerMode, currentUser } =
+    useApp();
   const cat = getCategoryById(id ?? '');
-  const jobs = getOpenJobs(id);
+
+  /** Workers see all open jobs; customers only their own in this category */
+  const jobs = useMemo(() => {
+    if (isWorkerMode) return getOpenJobs(id);
+    return getMyJobs().filter(
+      (j) => j.categoryId === id && j.userId === currentUser?.id
+    );
+  }, [isWorkerMode, getOpenJobs, getMyJobs, id, currentUser?.id]);
 
   return (
     <>
-      <Stack.Screen options={{ title: cat?.name ?? 'Kategorija' }} />
+      <Stack.Screen options={{ title: cat?.name ?? t.category }} />
       <View style={styles.flex}>
         {cat ? (
           <View style={styles.hero}>
@@ -35,17 +46,21 @@ export default function CategoryScreen() {
           </View>
         ) : null}
 
-        <View style={styles.ctaWrap}>
-          <Button
-            title="Objavi delo v tej kategoriji"
-            onPress={() =>
-              router.push({ pathname: '/post-job', params: { categoryId: id } })
-            }
-            fullWidth
-          />
-        </View>
+        {!isWorkerMode ? (
+          <View style={styles.ctaWrap}>
+            <Button
+              title={t.postInCategory}
+              onPress={() =>
+                router.push({ pathname: '/post-job', params: { categoryId: id } })
+              }
+              fullWidth
+            />
+          </View>
+        ) : null}
 
-        <Text style={styles.section}>Odprta dela · {jobs.length}</Text>
+        <Text style={styles.section}>
+          {isWorkerMode ? t.openJobs : t.myJobs} · {jobs.length}
+        </Text>
 
         <FlatList
           data={jobs}
@@ -55,9 +70,9 @@ export default function CategoryScreen() {
           ListEmptyComponent={
             <EmptyState
               icon="construct-outline"
-              title="Ni odprtih del"
-              subtitle="Objavite prvo delo v tej kategoriji."
-              actionLabel="Objavi delo"
+              title={isWorkerMode ? t.emptyCategoryTitle : t.noPosts}
+              subtitle={isWorkerMode ? t.emptyCategorySub : t.emptyPostsSub}
+              actionLabel={!isWorkerMode ? t.postJob : undefined}
               onAction={() =>
                 router.push({ pathname: '/post-job', params: { categoryId: id } })
               }

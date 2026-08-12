@@ -1,5 +1,7 @@
+import { Dict } from '../i18n/translations';
+
 export function formatPrice(budget: number | null): string {
-  if (budget === null || budget === undefined) return 'Po dogovoru';
+  if (budget === null || budget === undefined) return '—';
   return `${budget.toLocaleString('sl-SI')} €`;
 }
 
@@ -12,52 +14,67 @@ export function formatDate(iso: string): string {
   });
 }
 
-export function formatRelative(iso: string): string {
+export function formatRelative(iso: string, t?: Dict): string {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'pravkar';
-  if (mins < 60) return `pred ${mins} min`;
+  if (mins < 1) return t?.justNow ?? 'pravkar';
+  if (mins < 60) {
+    return (t?.minAgo ?? 'pred {n} min').replace('{n}', String(mins));
+  }
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `pred ${hours} h`;
+  if (hours < 24) {
+    return (t?.hAgo ?? 'pred {n} h').replace('{n}', String(hours));
+  }
   const days = Math.floor(hours / 24);
-  if (days === 1) return 'včeraj';
-  if (days < 7) return `pred ${days} dnevi`;
+  if (days === 1) return t?.yesterday ?? 'včeraj';
+  if (days < 7) {
+    return (t?.daysAgo ?? 'pred {n} dnevi').replace('{n}', String(days));
+  }
   return formatDate(iso);
 }
 
-export function statusLabel(status: string): string {
+export function statusLabel(status: string, t?: Dict): string {
+  if (!t) {
+    switch (status) {
+      case 'open':
+        return 'Odprto';
+      case 'in_progress':
+        return 'V teku';
+      case 'completed':
+        return 'Končano';
+      case 'cancelled':
+        return 'Preklicano';
+      case 'pending':
+        return 'Čaka';
+      case 'accepted':
+        return 'Sprejeto';
+      case 'rejected':
+        return 'Zavrnjeno';
+      case 'withdrawn':
+        return 'Umaknjeno';
+      default:
+        return status;
+    }
+  }
   switch (status) {
     case 'open':
-      return 'Odprto';
+      return t.statusOpen;
     case 'in_progress':
-      return 'V teku';
+      return t.statusInProgress;
     case 'completed':
-      return 'Končano';
+      return t.statusCompleted;
     case 'cancelled':
-      return 'Preklicano';
+      return t.statusCancelled;
     case 'pending':
-      return 'Čaka';
+      return t.statusPending;
     case 'accepted':
-      return 'Sprejeto';
+      return t.statusAccepted;
     case 'rejected':
-      return 'Zavrnjeno';
+      return t.statusRejected;
     case 'withdrawn':
-      return 'Umaknjeno';
+      return t.statusWithdrawn;
     default:
       return status;
-  }
-}
-
-export function roleLabel(role: string): string {
-  switch (role) {
-    case 'customer':
-      return 'Stranka';
-    case 'worker':
-      return 'Mojster';
-    case 'both':
-      return 'Stranka in mojster';
-    default:
-      return role;
   }
 }
 

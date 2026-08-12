@@ -13,10 +13,12 @@ import { Button } from '../src/components/Button';
 import { Input } from '../src/components/Input';
 import { useApp } from '../src/context/AppContext';
 import { CATEGORIES } from '../src/data/categories';
+import { useI18n } from '../src/i18n/I18nContext';
 import { colors, radius, spacing } from '../src/theme/colors';
 
 export default function EditProfileScreen() {
   const router = useRouter();
+  const { t } = useI18n();
   const { currentUser, updateProfile, isWorkerMode } = useApp();
 
   const [firstName, setFirstName] = useState(currentUser?.firstName ?? '');
@@ -56,8 +58,8 @@ export default function EditProfileScreen() {
 
   const typeLabel =
     currentUser?.activeMode === 'worker'
-      ? 'Iščem delo · Mojster'
-      : 'Potrebujem delo · Stranka';
+      ? t.profileTypeWorker
+      : t.profileTypeCustomer;
 
   return (
     <KeyboardAvoidingView
@@ -70,44 +72,44 @@ export default function EditProfileScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.typeBadge}>
-          <Text style={styles.typeBadgeLabel}>TIP PROFILA</Text>
+          <Text style={styles.typeBadgeLabel}>{t.profileType}</Text>
           <Text style={styles.typeBadgeValue}>{typeLabel}</Text>
           <Text style={styles.typeHint}>
-            Tip se izbere ob registraciji. Za drugi tip izbrišite podatke in ustvarite nov profil.
+            {t.profileTypeHint}
           </Text>
         </View>
 
-        <Input label="Ime" value={firstName} onChangeText={setFirstName} />
-        <Input label="Priimek" value={lastName} onChangeText={setLastName} />
+        <Input label={t.firstName} value={firstName} onChangeText={setFirstName} />
+        <Input label={t.lastName} value={lastName} onChangeText={setLastName} />
         <Input
-          label="E-mail"
+          label={t.email}
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
           autoCapitalize="none"
         />
         <Input
-          label="Telefon"
+          label={t.phone}
           value={phone}
           onChangeText={setPhone}
           keyboardType="phone-pad"
         />
-        <Input label="Mesto" value={city} onChangeText={setCity} />
+        <Input label={t.city} value={city} onChangeText={setCity} />
         <Input
-          label="Bio"
+          label={t.bio}
           value={bio}
           onChangeText={setBio}
           multiline
           numberOfLines={3}
           style={{ minHeight: 80, textAlignVertical: 'top' }}
-          placeholder="Kratek opis o vas ali vašem delu"
+          placeholder={t.bioPlaceholder}
         />
 
         {isWorkerMode ? (
           <>
-            <Text style={styles.label}>Specialnosti</Text>
+            <Text style={styles.label}>{t.specialties}</Text>
             <Text style={styles.hint}>
-              Po tem vas sistem uvrsti med relevantna dela.
+              {t.specialtiesHint}
             </Text>
             <View style={styles.specs}>
               {CATEGORIES.map((c) => {
@@ -129,7 +131,7 @@ export default function EditProfileScreen() {
         ) : null}
 
         <Button
-          title="Shrani"
+          title={t.save}
           onPress={save}
           loading={loading}
           fullWidth

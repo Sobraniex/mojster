@@ -20,6 +20,7 @@ import { OfferCard } from '../../src/components/OfferCard';
 import { useApp } from '../../src/context/AppContext';
 import { getCategoryById } from '../../src/data/categories';
 import { formatPrice, formatRelative, statusLabel } from '../../src/lib/format';
+import { useI18n } from '../../src/i18n/I18nContext';
 import { colors, radius, spacing } from '../../src/theme/colors';
 
 export default function JobDetailScreen() {
@@ -27,6 +28,7 @@ export default function JobDetailScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const galleryW = Math.min(width, 390);
+  const { t } = useI18n();
   const {
     jobs,
     currentUser,
@@ -49,16 +51,27 @@ export default function JobDetailScreen() {
   if (!job) {
     return (
       <View style={styles.center}>
-        <Text style={styles.missing}>Delo ni najdeno.</Text>
-        <Button title="Nazaj" onPress={() => router.back()} />
+        <Text style={styles.missing}>{t.jobNotFound}</Text>
+        <Button title={t.back} onPress={() => router.back()} />
       </View>
     );
   }
 
   const currentJob = job;
+  const isOwner = currentUser?.id === currentJob.userId;
+
+  // Customer profile: only own jobs. Workers may open any open listing.
+  if (!isWorkerMode && !isOwner) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.missing}>{t.jobNotFound}</Text>
+        <Button title={t.back} onPress={() => router.back()} />
+      </View>
+    );
+  }
+
   const cat = getCategoryById(currentJob.categoryId);
   const owner = getUserById(currentJob.userId);
-  const isOwner = currentUser?.id === currentJob.userId;
   const jobOffers = getOffersForJob(currentJob.id);
   const myOffer = currentUser
     ? jobOffers.find((o) => o.workerId === currentUser.id)
@@ -72,7 +85,7 @@ export default function JobDetailScreen() {
   async function submitOffer() {
     const n = Number(price.replace(',', '.'));
     if (!price.trim() || Number.isNaN(n) || n <= 0) {
-      Alert.alert('Cena', 'Vnesite veljavno ceno v EUR.');
+      Alert.alert(t.yourPrice, t.priceRequired);
       return;
     }
     setLoading(true);
@@ -81,17 +94,17 @@ export default function JobDetailScreen() {
       setOfferOpen(false);
       setPrice('');
       setMessage('');
-      Alert.alert('Poslano', 'Vaša ponudba je bila poslana naročniku.');
+      Alert.alert(t.sent, t.offerSent);
     } finally {
       setLoading(false);
     }
   }
 
   function confirmDelete() {
-    Alert.alert('Izbriši delo', 'Res želite izbrisati to objavo?', [
-      { text: 'Prekliči', style: 'cancel' },
+    Alert.alert(t.deletePost, t.deleteJobConfirm, [
+      { text: t.cancel, style: 'cancel' },
       {
-        text: 'Izbriši',
+        text: t.delete,
         style: 'destructive',
         onPress: async () => {
           await deleteJob(currentJob.id);
@@ -102,10 +115,10 @@ export default function JobDetailScreen() {
   }
 
   function confirmComplete() {
-    Alert.alert('Zaključek', 'Označiti delo kot končano?', [
-      { text: 'Prekliči', style: 'cancel' },
+    Alert.alert(t.done, t.completeConfirm, [
+      { text: t.cancel, style: 'cancel' },
       {
-        text: 'Končano',
+        text: t.done,
         onPress: () => updateJobStatus(currentJob.id, 'completed'),
       },
     ]);
@@ -113,7 +126,7 @@ export default function JobDetailScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: cat?.name ?? 'Delo' }} />
+      <Stack.Screen options={{ title: cat?.name ?? t.job }} />
       <ScrollView
         style={styles.flex}
         contentContainerStyle={styles.content}
@@ -148,14 +161,14 @@ export default function JobDetailScreen() {
         <View style={styles.body}>
           <View style={styles.topMeta}>
             <Text style={styles.category}>{cat?.name?.toUpperCase()}</Text>
-            <Text style={styles.status}>{statusLabel(currentJob.status)}</Text>
+            <Text style={styles.status}>{statusLabel(currentJob.status, t)}</Text>
           </View>
 
           <Text style={styles.title}>{currentJob.title}</Text>
           <Text style={styles.dealNote}>
-            Cena se dogovori v aplikaciji prek ponudb.
+            {t.dealNote}
           </Text>
-          <Text style={styles.time}>Objavljeno {formatRelative(currentJob.createdAt)}</Text>
+          <Text style={styles.time}>{t.published} {formatRelative(currentJob.createdAt, t)}</Text>
 
           <View style={styles.locBox}>
             <Ionicons name="location-outline" size={16} color={colors.textMuted} />
@@ -164,12 +177,12 @@ export default function JobDetailScreen() {
             </Text>
           </View>
 
-          <Text style={styles.section}>Opis</Text>
+          <Text style={styles.section}>{t.descriptionSection}</Text>
           <Text style={styles.desc}>{currentJob.description}</Text>
 
           {owner ? (
             <>
-              <Text style={styles.section}>Naročnik</Text>
+              <Text style={styles.section}>{t.client}</Text>
               <View style={styles.ownerCard}>
                 <View style={styles.ownerAvatar}>
                   <Text style={styles.ownerInitials}>
@@ -188,7 +201,7 @@ export default function JobDetailScreen() {
                     </>
                   ) : (
                     <Text style={styles.ownerContact}>
-                      Kontakt po sprejeti ponudbi
+                      {t.contactAfter}
                     </Text>
                   )}
                 </View>
@@ -198,7 +211,7 @@ export default function JobDetailScreen() {
 
           {canOffer ? (
             <Button
-              title="Pošlji ponudbo"
+              title={t.sendOffer}
               onPress={() => setOfferOpen(true)}
               fullWidth
               style={{ marginTop: spacing.md }}
@@ -207,21 +220,21 @@ export default function JobDetailScreen() {
 
           {myOffer ? (
             <View style={styles.myOfferBox}>
-              <Text style={styles.myOfferLabel}>VAŠA PONUDBA</Text>
+              <Text style={styles.myOfferLabel}>{t.yourOffer}</Text>
               <Text style={styles.myOfferPrice}>{formatPrice(myOffer.price)}</Text>
-              <Text style={styles.myOfferStatus}>{statusLabel(myOffer.status)}</Text>
+              <Text style={styles.myOfferStatus}>{statusLabel(myOffer.status, t)}</Text>
               {myOffer.message ? (
                 <Text style={styles.myOfferMsg}>{myOffer.message}</Text>
               ) : null}
             </View>
           ) : null}
 
-          <Text style={styles.section}>Ponudbe · {jobOffers.length}</Text>
+          <Text style={styles.section}>{t.offersSection} · {jobOffers.length}</Text>
           {jobOffers.length === 0 ? (
             <Text style={styles.emptyOffers}>
               {isOwner
-                ? 'Še ni ponudb. Počakajte, da mojstri najdejo vaše delo.'
-                : 'Še ni ponudb.'}
+                ? t.noOffersOwner
+                : t.noOffersPublic}
             </Text>
           ) : (
             jobOffers.map((o) => (
@@ -233,8 +246,8 @@ export default function JobDetailScreen() {
                 onAccept={async () => {
                   await acceptOffer(o.id);
                   Alert.alert(
-                    'Dogovor sklenjen',
-                    'Ponudba je sprejeta. Zdaj lahko kontaktirate mojstra.'
+                    t.dealMade,
+                    t.dealMadeSub
                   );
                 }}
                 onReject={() => rejectOffer(o.id)}
@@ -244,7 +257,7 @@ export default function JobDetailScreen() {
 
           {isOwner && currentJob.status === 'in_progress' ? (
             <Button
-              title="Označi kot končano"
+              title={t.markDone}
               onPress={confirmComplete}
               fullWidth
               style={{ marginTop: spacing.sm }}
@@ -253,7 +266,7 @@ export default function JobDetailScreen() {
 
           {isOwner ? (
             <Button
-              title="Izbriši objavo"
+              title={t.deletePost}
               variant="danger"
               onPress={confirmDelete}
               fullWidth
@@ -270,21 +283,21 @@ export default function JobDetailScreen() {
         >
           <Pressable style={styles.modalBackdrop} onPress={() => setOfferOpen(false)} />
           <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>Ponudba</Text>
+            <Text style={styles.modalTitle}>{t.offerTitle}</Text>
             <Text style={styles.modalSub}>
-              Predlagajte pogoje in ceno neposredno naročniku. Dogovor poteka v app-u.
+              {t.offerSub}
             </Text>
             <Input
-              label="Vaša cena (EUR)"
+              label={t.yourPrice}
               placeholder="180"
               value={price}
               onChangeText={setPrice}
               keyboardType="decimal-pad"
-              hint="Vidna le naročniku v vaši ponudbi — ne na javni objavi."
+              hint={t.priceHint}
             />
             <Input
-              label="Sporočilo"
-              placeholder="Kdaj lahko pridete, kaj vključuje ponudba…"
+              label={t.message}
+              placeholder={t.messagePh}
               value={message}
               onChangeText={setMessage}
               multiline
@@ -293,13 +306,13 @@ export default function JobDetailScreen() {
             />
             <View style={styles.modalActions}>
               <Button
-                title="Prekliči"
+                title={t.cancel}
                 variant="ghost"
                 onPress={() => setOfferOpen(false)}
                 style={{ flex: 1 }}
               />
               <Button
-                title="Pošlji"
+                title={t.send}
                 onPress={submitOffer}
                 loading={loading}
                 style={{ flex: 1 }}

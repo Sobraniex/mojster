@@ -2,10 +2,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { Redirect, Tabs } from 'expo-router';
 import { Platform } from 'react-native';
 import { useApp } from '../../src/context/AppContext';
+import { useI18n } from '../../src/i18n/I18nContext';
 import { colors } from '../../src/theme/colors';
 
 export default function TabsLayout() {
   const { currentUser, onboardingComplete, isWorkerMode, needsPayment } = useApp();
+  const { t } = useI18n();
 
   if (!onboardingComplete || !currentUser) {
     return <Redirect href="/" />;
@@ -40,7 +42,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: isWorkerMode ? 'Dela' : 'Storitve',
+          title: isWorkerMode ? t.tabJobs : t.tabServices,
           tabBarIcon: ({ color, size }) => (
             <Ionicons
               name={isWorkerMode ? 'search-outline' : 'grid-outline'}
@@ -53,7 +55,9 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="explore"
         options={{
-          title: isWorkerMode ? 'Vsa dela' : 'Raziskuj',
+          // Market feed is for workers only; customers use "My jobs"
+          href: isWorkerMode ? undefined : null,
+          title: isWorkerMode ? t.tabAllJobs : t.tabExplore,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="compass-outline" size={size - 2} color={color} />
           ),
@@ -62,7 +66,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="jobs"
         options={{
-          title: isWorkerMode ? 'Moje ponudbe' : 'Moja dela',
+          title: isWorkerMode ? t.tabMyOffers : t.tabMyJobs,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="briefcase-outline" size={size - 2} color={color} />
           ),
@@ -71,7 +75,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profil',
+          title: t.tabProfile,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-outline" size={size - 2} color={color} />
           ),

@@ -3,11 +3,14 @@ import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { PhoneShell } from '../src/components/PhoneShell';
+import { SettingsGear } from '../src/components/SettingsGear';
 import { AppProvider, useApp } from '../src/context/AppContext';
+import { I18nProvider, useI18n } from '../src/i18n/I18nContext';
 import { colors } from '../src/theme/colors';
 
 function RootNavigator() {
   const { ready } = useApp();
+  const { t } = useI18n();
 
   if (!ready) {
     return (
@@ -18,7 +21,7 @@ function RootNavigator() {
   }
 
   return (
-    <>
+    <View style={styles.root}>
       <StatusBar style="dark" />
       <Stack
         screenOptions={{
@@ -43,21 +46,21 @@ function RootNavigator() {
           options={{
             presentation: 'modal',
             headerShown: true,
-            title: 'Nova objava',
+            title: t.newPost,
           }}
         />
         <Stack.Screen
           name="job/[id]"
           options={{
             headerShown: true,
-            title: 'Delo',
+            title: t.job,
           }}
         />
         <Stack.Screen
           name="category/[id]"
           options={{
             headerShown: true,
-            title: 'Kategorija',
+            title: t.category,
           }}
         />
         <Stack.Screen
@@ -65,27 +68,35 @@ function RootNavigator() {
           options={{
             presentation: 'modal',
             headerShown: true,
-            title: 'Uredi profil',
+            title: t.editProfile,
           }}
         />
       </Stack>
-    </>
+      {/* Global settings — language for entire app */}
+      <SettingsGear />
+    </View>
   );
 }
 
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <AppProvider>
-        <PhoneShell>
-          <RootNavigator />
-        </PhoneShell>
-      </AppProvider>
+      <I18nProvider>
+        <AppProvider>
+          <PhoneShell>
+            <RootNavigator />
+          </PhoneShell>
+        </AppProvider>
+      </I18nProvider>
     </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   loading: {
     flex: 1,
     alignItems: 'center',

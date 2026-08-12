@@ -10,13 +10,18 @@ type Props = {
 };
 
 /**
- * Web desktop: premium phone mockup.
- * Native / narrow: full-bleed app.
+ * Real phones / narrow screens: full-bleed (production mobile).
+ * Large desktop only: optional phone mockup frame.
  */
 export function PhoneShell({ children }: Props) {
   const { width, height } = useWindowDimensions();
   const isWeb = Platform.OS === 'web';
-  const showFrame = isWeb && width >= 480 && height >= 620;
+  // Prefer full-bleed on phones & small tablets; frame only on desktop
+  const isTouchPhone =
+    isWeb &&
+    typeof navigator !== 'undefined' &&
+    (navigator.maxTouchPoints > 0 || /Mobi|Android|iPhone/i.test(navigator.userAgent));
+  const showFrame = isWeb && !isTouchPhone && width >= 520 && height >= 680;
 
   if (!showFrame) {
     return <View style={styles.fill}>{children}</View>;

@@ -16,11 +16,13 @@ import { EmptyState } from '../../src/components/EmptyState';
 import { JobCard } from '../../src/components/JobCard';
 import { useApp } from '../../src/context/AppContext';
 import { CATEGORIES } from '../../src/data/categories';
+import { useI18n } from '../../src/i18n/I18nContext';
 import { colors, radius, spacing } from '../../src/theme/colors';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { t } = useI18n();
   const {
     currentUser,
     isWorkerMode,
@@ -71,7 +73,7 @@ export default function HomeScreen() {
               : 'MOJSTER'}
           </Text>
           <Text style={styles.headline}>
-            {isWorkerMode ? 'Iščete delo' : 'Kaj potrebujete?'}
+            {isWorkerMode ? t.lookingForWork : t.whatDoYouNeed}
           </Text>
         </View>
         {!isWorkerMode ? (
@@ -88,7 +90,7 @@ export default function HomeScreen() {
         <Ionicons name="search-outline" size={18} color={colors.textMuted} />
         <TextInput
           style={styles.search}
-          placeholder={isWorkerMode ? 'Iskanje del' : 'Iskanje storitev'}
+          placeholder={isWorkerMode ? t.searchJobs : t.searchServices}
           placeholderTextColor={colors.textMuted}
           value={query}
           onChangeText={setQuery}
@@ -108,17 +110,17 @@ export default function HomeScreen() {
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={
             <View style={{ marginBottom: 8 }}>
-              <Text style={styles.section}>Odprta dela</Text>
+              <Text style={styles.section}>{t.openJobs}</Text>
               <Text style={styles.sectionHint}>
-                Pošljite ponudbo. Dogovor sklenete v aplikaciji.
+                {t.openJobsHint}
               </Text>
             </View>
           }
           ListEmptyComponent={
             <EmptyState
               icon="search-outline"
-              title="Ni odprtih del"
-              subtitle="Trenutno ni objav. Preklopite nazaj kasneje."
+              title={t.noOpenJobs}
+              subtitle={t.noOpenJobsSub}
             />
           }
           renderItem={({ item }) => (
@@ -134,9 +136,9 @@ export default function HomeScreen() {
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.section}>Storitve</Text>
+          <Text style={styles.section}>{t.services}</Text>
           <Text style={styles.sectionHint}>
-            Izberite kategorijo ali takoj objavite delo. Cene ni na objavi — dogovor v app-u.
+            {t.servicesHint}
           </Text>
 
           {rows.map((row, idx) => (
@@ -154,7 +156,7 @@ export default function HomeScreen() {
           ))}
 
           {filtered.length === 0 ? (
-            <Text style={styles.empty}>Ni rezultatov za »{query}«</Text>
+            <Text style={styles.empty}>{t.noResults} »{query}«</Text>
           ) : null}
 
           <Pressable
@@ -162,10 +164,10 @@ export default function HomeScreen() {
             onPress={() => router.push('/post-job')}
           >
             <View style={{ flex: 1 }}>
-              <Text style={styles.ctaKicker}>HITRI ZAČETEK</Text>
-              <Text style={styles.ctaTitle}>Objavite delo</Text>
+              <Text style={styles.ctaKicker}>{t.quickStart}</Text>
+              <Text style={styles.ctaTitle}>{t.postJob}</Text>
               <Text style={styles.ctaSub}>
-                Fotografije in opis. Mojstri pošljejo ponudbe v app-u.
+                {t.postJobSub}
               </Text>
             </View>
             <Ionicons name="arrow-forward" size={18} color={colors.ink} />
@@ -185,6 +187,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
     paddingBottom: spacing.sm,
+    paddingRight: 64,
     gap: 12,
   },
   kicker: {

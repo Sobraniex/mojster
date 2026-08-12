@@ -14,12 +14,14 @@ import { Button } from '../src/components/Button';
 import { Input } from '../src/components/Input';
 import { useApp } from '../src/context/AppContext';
 import { AppMode } from '../src/data/types';
+import { useI18n } from '../src/i18n/I18nContext';
 import { colors, radius, spacing } from '../src/theme/colors';
 
 type Step = 'welcome' | 'profile';
 
 export default function OnboardingScreen() {
   const { onboardingComplete, createProfile, needsPayment } = useApp();
+  const { t } = useI18n();
   const insets = useSafeAreaInsets();
 
   const [step, setStep] = useState<Step>('welcome');
@@ -33,9 +35,7 @@ export default function OnboardingScreen() {
   const [loading, setLoading] = useState(false);
 
   if (onboardingComplete) {
-    if (needsPayment) {
-      return <Redirect href="/payment" />;
-    }
+    if (needsPayment) return <Redirect href="/payment" />;
     return <Redirect href="/(tabs)/profile" />;
   }
 
@@ -62,10 +62,10 @@ export default function OnboardingScreen() {
 
   function validate() {
     const e: Record<string, string> = {};
-    if (!firstName.trim()) e.firstName = 'Vnesite ime';
-    if (!lastName.trim()) e.lastName = 'Vnesite priimek';
-    if (!email.trim() || !email.includes('@')) e.email = 'Vnesite veljaven e-mail';
-    if (!phone.trim() || phone.trim().length < 8) e.phone = 'Vnesite telefonsko številko';
+    if (!firstName.trim()) e.firstName = t.errFirstName;
+    if (!lastName.trim()) e.lastName = t.errLastName;
+    if (!email.trim() || !email.includes('@')) e.email = t.errEmail;
+    if (!phone.trim() || phone.trim().length < 8) e.phone = t.errPhone;
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -82,7 +82,6 @@ export default function OnboardingScreen() {
         activeMode,
         city: city || undefined,
       });
-      // Workers are redirected to payment via needsPayment on next render
     } finally {
       setLoading(false);
     }
@@ -104,30 +103,26 @@ export default function OnboardingScreen() {
           <View style={styles.mark}>
             <View style={styles.markInner} />
           </View>
-          <Text style={styles.brand}>MOJSTER</Text>
-          <Text style={styles.tagline}>
-            Vstop v profil — izberite tip, nato vnesite podatke.
-          </Text>
+          <Text style={styles.brand}>{t.appName}</Text>
+          <Text style={styles.tagline}>{t.welcomeTagline}</Text>
         </View>
 
         <View style={styles.paths}>
-          <Text style={styles.kicker}>VSTOP V PROFIL</Text>
+          <Text style={styles.kicker}>{t.entryTitle}</Text>
 
           <Pressable
             onPress={() => choosePath('customer')}
             style={({ pressed }) => [styles.pathCard, pressed && styles.pathPressed]}
           >
             <Text style={styles.pathNumber}>01</Text>
-            <Text style={styles.pathTitle}>Potrebujem delo</Text>
-            <Text style={styles.pathText}>
-              Objavim, kaj moram urediti doma. Mojstri mi pošljejo ponudbe v app-u.
-            </Text>
-            <Text style={styles.pathCta}>Vstop v profil stranke →</Text>
+            <Text style={styles.pathTitle}>{t.needWork}</Text>
+            <Text style={styles.pathText}>{t.needWorkDesc}</Text>
+            <Text style={styles.pathCta}>{t.needWorkCta}</Text>
           </Pressable>
 
           <View style={styles.pathDivider}>
             <View style={styles.pathLine} />
-            <Text style={styles.pathOr}>ali</Text>
+            <Text style={styles.pathOr}>{t.or}</Text>
             <View style={styles.pathLine} />
           </View>
 
@@ -136,28 +131,16 @@ export default function OnboardingScreen() {
             style={({ pressed }) => [styles.pathCardDark, pressed && styles.pathPressed]}
           >
             <Text style={styles.pathNumberDark}>02</Text>
-            <Text style={styles.pathTitleDark}>Iščem delo</Text>
-            <Text style={styles.pathTextDark}>
-              Sem mojster. Po profilu sledi plačilo naročnine za dostop do del.
-            </Text>
-            <Text style={styles.pathCtaDark}>Vstop v profil mojstra →</Text>
+            <Text style={styles.pathTitleDark}>{t.seekWork}</Text>
+            <Text style={styles.pathTextDark}>{t.seekWorkDesc}</Text>
+            <Text style={styles.pathCtaDark}>{t.seekWorkCta}</Text>
           </Pressable>
 
-          <Pressable
-            onPress={() => quickEnter('customer')}
-            style={styles.quickLink}
-          >
-            <Text style={styles.quickLinkText}>
-              Hitri vstop (demo stranka) — brez obrazca
-            </Text>
+          <Pressable onPress={() => quickEnter('customer')} style={styles.quickLink}>
+            <Text style={styles.quickLinkText}>{t.demoCustomer}</Text>
           </Pressable>
-          <Pressable
-            onPress={() => quickEnter('worker')}
-            style={styles.quickLink}
-          >
-            <Text style={styles.quickLinkText}>
-              Hitri vstop (demo mojster) — brez obrazca
-            </Text>
+          <Pressable onPress={() => quickEnter('worker')} style={styles.quickLink}>
+            <Text style={styles.quickLinkText}>{t.demoWorker}</Text>
           </Pressable>
         </View>
       </View>
@@ -182,23 +165,21 @@ export default function OnboardingScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <Pressable onPress={() => setStep('welcome')} style={styles.backLink}>
-          <Text style={styles.backLinkText}>← Spremeni tip profila</Text>
+          <Text style={styles.backLinkText}>{t.changeProfileType}</Text>
         </Pressable>
 
         <View style={styles.typeBadge}>
-          <Text style={styles.typeBadgeLabel}>TIP PROFILA</Text>
+          <Text style={styles.typeBadgeLabel}>{t.typeBadge}</Text>
           <Text style={styles.typeBadgeValue}>
-            {isWorker ? 'Iščem delo · Mojster' : 'Potrebujem delo · Stranka'}
+            {isWorker ? t.profileTypeWorker : t.profileTypeCustomer}
           </Text>
         </View>
 
-        <Text style={styles.stepTitle}>Vstop v profil</Text>
-        <Text style={styles.stepSub}>
-          Izpolnite podatke in vstopite v svoj profil.
-        </Text>
+        <Text style={styles.stepTitle}>{t.createProfile}</Text>
+        <Text style={styles.stepSub}>{t.createProfileSub}</Text>
 
         <Input
-          label="Ime"
+          label={t.firstName}
           placeholder="Janez"
           value={firstName}
           onChangeText={setFirstName}
@@ -206,7 +187,7 @@ export default function OnboardingScreen() {
           error={errors.firstName}
         />
         <Input
-          label="Priimek"
+          label={t.lastName}
           placeholder="Novak"
           value={lastName}
           onChangeText={setLastName}
@@ -214,7 +195,7 @@ export default function OnboardingScreen() {
           error={errors.lastName}
         />
         <Input
-          label="E-mail"
+          label={t.email}
           placeholder="janez@email.si"
           value={email}
           onChangeText={setEmail}
@@ -223,7 +204,7 @@ export default function OnboardingScreen() {
           error={errors.email}
         />
         <Input
-          label="Telefon"
+          label={t.phone}
           placeholder="+386 40 123 456"
           value={phone}
           onChangeText={setPhone}
@@ -231,7 +212,7 @@ export default function OnboardingScreen() {
           error={errors.phone}
         />
         <Input
-          label="Mesto"
+          label={t.city}
           placeholder="Ljubljana"
           value={city}
           onChangeText={setCity}
@@ -239,7 +220,7 @@ export default function OnboardingScreen() {
         />
 
         <Button
-          title={isWorker ? 'Vstopi v profil mojstra' : 'Vstopi v profil stranke'}
+          title={isWorker ? t.enterAsWorker : t.enterAsCustomer}
           onPress={handleSubmit}
           loading={loading}
           fullWidth
@@ -253,9 +234,7 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.background },
   padded: { paddingHorizontal: spacing.lg },
-  welcomeTop: {
-    marginBottom: spacing.xl,
-  },
+  welcomeTop: { marginBottom: spacing.md, paddingRight: 48 },
   mark: {
     width: 48,
     height: 48,
@@ -285,11 +264,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     maxWidth: 320,
   },
-  paths: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingBottom: spacing.lg,
-  },
+  paths: { flex: 1, justifyContent: 'center', paddingBottom: spacing.lg },
   kicker: {
     fontSize: 11,
     fontWeight: '600',
@@ -311,9 +286,7 @@ const styles = StyleSheet.create({
     borderColor: colors.ink,
     padding: spacing.lg,
   },
-  pathPressed: {
-    opacity: 0.9,
-  },
+  pathPressed: { opacity: 0.9 },
   pathNumber: {
     fontSize: 11,
     fontWeight: '600',
@@ -372,11 +345,7 @@ const styles = StyleSheet.create({
     gap: 12,
     marginVertical: 16,
   },
-  pathLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.border,
-  },
+  pathLine: { flex: 1, height: 1, backgroundColor: colors.border },
   pathOr: {
     fontSize: 11,
     fontWeight: '600',
@@ -384,9 +353,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: colors.textMuted,
   },
-  backLink: {
-    marginBottom: 16,
-  },
+  backLink: { marginBottom: 16 },
   backLinkText: {
     fontSize: 13,
     fontWeight: '600',

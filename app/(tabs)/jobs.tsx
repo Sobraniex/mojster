@@ -6,18 +6,13 @@ import { EmptyState } from '../../src/components/EmptyState';
 import { JobCard } from '../../src/components/JobCard';
 import { useApp } from '../../src/context/AppContext';
 import { JobStatus } from '../../src/data/types';
+import { useI18n } from '../../src/i18n/I18nContext';
 import { colors, radius, spacing } from '../../src/theme/colors';
-
-const FILTERS: { id: 'all' | JobStatus; label: string }[] = [
-  { id: 'all', label: 'Vsa' },
-  { id: 'open', label: 'Odprta' },
-  { id: 'in_progress', label: 'V teku' },
-  { id: 'completed', label: 'Končana' },
-];
 
 export default function MyJobsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { t } = useI18n();
   const {
     getMyJobs,
     getOffersForJob,
@@ -27,6 +22,13 @@ export default function MyJobsScreen() {
     isWorkerMode,
   } = useApp();
   const [status, setStatus] = useState<'all' | JobStatus>('all');
+
+  const FILTERS: { id: 'all' | JobStatus; label: string }[] = [
+    { id: 'all', label: t.filterAll },
+    { id: 'open', label: t.filterOpen },
+    { id: 'in_progress', label: t.filterInProgress },
+    { id: 'completed', label: t.filterDone },
+  ];
 
   const posted = useMemo(() => {
     let list = getMyJobs();
@@ -50,14 +52,14 @@ export default function MyJobsScreen() {
     <View style={[styles.flex, { paddingTop: Math.max(insets.top, 44) }]}>
       <View style={styles.header}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.kicker}>PORTFELJ</Text>
+          <Text style={styles.kicker}>{t.portfolio}</Text>
           <Text style={styles.title}>
-            {isWorkerMode ? 'Moje ponudbe' : 'Moja dela'}
+            {isWorkerMode ? t.myOffers : t.myJobs}
           </Text>
         </View>
         {!isWorkerMode ? (
           <Pressable style={styles.addBtn} onPress={() => router.push('/post-job')}>
-            <Text style={styles.addBtnText}>Objavi</Text>
+            <Text style={styles.addBtnText}>{t.publish}</Text>
           </Pressable>
         ) : null}
       </View>
@@ -84,13 +86,9 @@ export default function MyJobsScreen() {
         ListEmptyComponent={
           <EmptyState
             icon="briefcase-outline"
-            title={isWorkerMode ? 'Ni ponudb' : 'Ni objav'}
-            subtitle={
-              isWorkerMode
-                ? 'Pošljite ponudbo na odprta dela — dogovor sklenete v app-u.'
-                : 'Objavite delo — mojstri pošljejo ponudbe.'
-            }
-            actionLabel={isWorkerMode ? 'Poglej dela' : 'Objavi delo'}
+            title={isWorkerMode ? t.noOffersYet : t.noPosts}
+            subtitle={isWorkerMode ? t.emptyOffersSub : t.emptyPostsSub}
+            actionLabel={isWorkerMode ? t.viewJobs : t.postJob}
             onAction={() =>
               isWorkerMode ? router.push('/(tabs)/explore') : router.push('/post-job')
             }
@@ -117,6 +115,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
     paddingBottom: spacing.sm,
+    paddingRight: 64,
   },
   kicker: {
     fontSize: 10,

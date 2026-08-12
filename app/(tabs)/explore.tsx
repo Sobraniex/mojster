@@ -6,44 +6,59 @@ import { EmptyState } from '../../src/components/EmptyState';
 import { JobCard } from '../../src/components/JobCard';
 import { useApp } from '../../src/context/AppContext';
 import { CATEGORIES } from '../../src/data/categories';
+import { useI18n } from '../../src/i18n/I18nContext';
 import { colors, radius, spacing } from '../../src/theme/colors';
 
+/**
+ * Worker: full open-job market.
+ * Customer: only their own posts (never other clients' jobs).
+ */
 export default function ExploreScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { t } = useI18n();
   const {
     isWorkerMode,
     getOpenJobs,
     getJobsMatchingWorker,
+    getMyJobs,
     getOffersForJob,
   } = useApp();
   const [filter, setFilter] = useState<string | 'all' | 'match'>('all');
 
   const jobs = useMemo(() => {
-    if (filter === 'match' && isWorkerMode) return getJobsMatchingWorker();
+    // Customers only ever see their own jobs
+    if (!isWorkerMode) {
+      let list = getMyJobs();
+      if (filter !== 'all' && filter !== 'match') {
+        list = list.filter((j) => j.categoryId === filter);
+      }
+      return list;
+    }
+    if (filter === 'match') return getJobsMatchingWorker();
     if (filter !== 'all' && filter !== 'match') return getOpenJobs(filter);
     return getOpenJobs();
-  }, [filter, isWorkerMode, getOpenJobs, getJobsMatchingWorker]);
+  }, [filter, isWorkerMode, getOpenJobs, getJobsMatchingWorker, getMyJobs]);
 
   return (
     <View style={[styles.flex, { paddingTop: Math.max(insets.top, 44) }]}>
       <View style={styles.header}>
-        <Text style={styles.kicker}>TRG DELOV</Text>
+        <Text style={styles.kicker}>
+          {isWorkerMode ? t.jobMarket : t.portfolio}
+        </Text>
         <Text style={styles.title}>
-          {isWorkerMode ? 'Odprta dela' : 'Vsa odprta dela'}
+          {isWorkerMode ? t.openJobsTitle : t.myJobs}
         </Text>
         <Text style={styles.sub}>
-          {isWorkerMode
-            ? 'Preglejte objave in pošljite ponudbo. Dogovor sklenete v app-u.'
-            : 'Pregled trga. Objavite delo — mojstri pošljejo ponudbe v app-u.'}
+          {isWorkerMode ? t.exploreWorkerSub : t.emptyPostsSub}
         </Text>
       </View>
 
       <FlatList
         horizontal
         data={[
-          { id: 'all', label: 'Vse' },
-          ...(isWorkerMode ? [{ id: 'match', label: 'Zame' }] : []),
+          { id: 'all', label: t.all },
+          ...(isWorkerMode ? [{ id: 'match', label: t.forMe }] : []),
           ...CATEGORIES.map((c) => ({ id: c.id, label: c.name })),
         ]}
         keyExtractor={(i) => i.id}
@@ -69,14 +84,10 @@ export default function ExploreScreen() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <EmptyState
-            icon="search-outline"
-            title="Ni odprtih del"
-            subtitle={
-              isWorkerMode
-                ? 'V tej kategoriji trenutno ni objav.'
-                : 'Bodite prvi — objavite delo, ki ga potrebujete.'
-            }
-            actionLabel={!isWorkerMode ? 'Objavi delo' : undefined}
+            icon={isWorkerMode ? 'search-outline' : 'briefcase-outline'}
+            title={isWorkerMode ? t.noOpenJobs : t.noPosts}
+            subtitle={isWorkerMode ? t.emptyCategory : t.emptyPostsSub}
+            actionLabel={!isWorkerMode ? t.postJob : undefined}
             onAction={() => router.push('/post-job')}
           />
         }
@@ -98,6 +109,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
     paddingBottom: spacing.sm,
+    paddingRight: 64,
   },
   kicker: {
     fontSize: 10,

@@ -6,29 +6,22 @@ import { Button } from '../../src/components/Button';
 import { useApp } from '../../src/context/AppContext';
 import { CATEGORIES } from '../../src/data/categories';
 import { getPlanById } from '../../src/data/plans';
-import { initials, formatDate } from '../../src/lib/format';
+import { useI18n } from '../../src/i18n/I18nContext';
+import { formatDate, initials } from '../../src/lib/format';
 import { colors, radius, spacing } from '../../src/theme/colors';
 
 function askConfirm(message: string): boolean {
   if (Platform.OS === 'web') {
-    // Alert.alert does not work on web — use native browser confirm
     return typeof window !== 'undefined' ? window.confirm(message) : true;
   }
-  // Native: proceed; RN Alert is async — callers use fire-and-forget paths on web mainly
   return true;
 }
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const {
-    currentUser,
-    getMyJobs,
-    offers,
-    logout,
-    resetDemo,
-    isWorkerMode,
-  } = useApp();
+  const { t } = useI18n();
+  const { currentUser, getMyJobs, offers, logout, resetDemo, isWorkerMode } = useApp();
 
   if (!currentUser) return null;
 
@@ -39,26 +32,22 @@ export default function ProfileScreen() {
   );
   const modeLabel =
     currentUser.activeMode === 'worker'
-      ? 'Profil mojstra · Iščem delo'
-      : 'Profil stranke · Potrebujem delo';
+      ? t.profileLabelWorker
+      : t.profileLabelCustomer;
 
   async function handleLogout() {
-    if (!askConfirm('Želite se odjaviti in zapustiti aplikacijo?')) return;
+    if (!askConfirm(t.logoutConfirm)) return;
     await logout();
     router.replace('/');
   }
 
   async function handleReset() {
-    if (
-      !askConfirm(
-        'To trajno izbriše profil, dela in ponudbe. Nadaljujem?'
-      )
-    ) {
-      return;
-    }
+    if (!askConfirm(t.deleteConfirm)) return;
     await resetDemo();
     router.replace('/');
   }
+
+  const planName = getPlanById(currentUser.subscriptionPlan)?.name;
 
   return (
     <ScrollView
@@ -70,8 +59,8 @@ export default function ProfileScreen() {
       }}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.kicker}>RAČUN</Text>
-      <Text style={styles.pageTitle}>Profil</Text>
+      <Text style={[styles.kicker, { paddingRight: 48 }]}>{t.account}</Text>
+      <Text style={[styles.pageTitle, { paddingRight: 48 }]}>{t.profile}</Text>
 
       <View style={styles.card}>
         <View style={styles.avatar}>
@@ -93,7 +82,7 @@ export default function ProfileScreen() {
         ) : null}
 
         <Button
-          title="Uredi profil"
+          title={t.editProfile}
           variant="outline"
           onPress={() => router.push('/edit-profile')}
           style={{ marginTop: spacing.md, width: '100%' }}
@@ -101,28 +90,25 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.stats}>
-        <Stat label="Objave" value={String(myJobs.length)} />
-        <Stat label="Ponudbe" value={String(myOffers.length)} />
+        <Stat label={t.posts} value={String(myJobs.length)} />
+        <Stat label={t.offersCount} value={String(myOffers.length)} />
         <Stat
-          label="Odprto"
+          label={t.openCount}
           value={String(myJobs.filter((j) => j.status === 'open').length)}
         />
       </View>
 
       {isWorkerMode && currentUser.paymentStatus === 'active' ? (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Naročnina</Text>
-          <Text style={styles.subActive}>Aktivna</Text>
+          <Text style={styles.sectionTitle}>{t.subscription}</Text>
+          <Text style={styles.subActive}>{t.active}</Text>
           <Text style={styles.muted}>
-            Paket:{' '}
-            {getPlanById(currentUser.subscriptionPlan)?.name ?? '—'}
-            {currentUser.paidAt
-              ? ` · Od ${formatDate(currentUser.paidAt)}`
-              : ''}
+            {t.plan}: {planName ?? '—'}
+            {currentUser.paidAt ? ` · ${t.from} ${formatDate(currentUser.paidAt)}` : ''}
           </Text>
           {currentUser.paymentCardLast4 ? (
             <Text style={[styles.muted, { marginTop: 6 }]}>
-              Kartica ···· {currentUser.paymentCardLast4}
+              {t.card} ···· {currentUser.paymentCardLast4}
             </Text>
           ) : null}
         </View>
@@ -130,11 +116,9 @@ export default function ProfileScreen() {
 
       {isWorkerMode ? (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Specialnosti</Text>
+          <Text style={styles.sectionTitle}>{t.specialties}</Text>
           {specialties.length === 0 ? (
-            <Text style={styles.muted}>
-              Ni izbranih specialnosti. Uredite profil in izberite, kaj delate.
-            </Text>
+            <Text style={styles.muted}>{t.noSpecialties}</Text>
           ) : (
             <View style={styles.chips}>
               {specialties.map((s) => (
@@ -148,29 +132,29 @@ export default function ProfileScreen() {
       ) : null}
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Postopek</Text>
-        <HowRow n="01" text="Objavite delo s fotografijami in opisom (brez cene)" />
-        <HowRow n="02" text="Mojstri pošljejo ponudbe neposredno v app-u" />
-        <HowRow n="03" text="Sprejmete ponudbo in sklenete dogovor" />
-        <HowRow n="04" text="Kontakt prek telefona ali e-maila" />
+        <Text style={styles.sectionTitle}>{t.howItWorks}</Text>
+        <HowRow n="01" text={t.how1} />
+        <HowRow n="02" text={t.how2} />
+        <HowRow n="03" text={t.how3} />
+        <HowRow n="04" text={t.how4} />
       </View>
 
       <Button
-        title="Odjava — izhod iz aplikacije"
+        title={t.logout}
         variant="outline"
         onPress={handleLogout}
         fullWidth
         style={{ marginTop: spacing.lg }}
       />
       <Button
-        title="Izbriši profil in izhod"
+        title={t.deleteProfile}
         variant="danger"
         onPress={handleReset}
         fullWidth
         style={{ marginTop: 10 }}
       />
 
-      <Text style={styles.version}>MOJSTER  ·  1.0.0</Text>
+      <Text style={styles.version}>{t.version}</Text>
     </ScrollView>
   );
 }
@@ -257,9 +241,9 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontSize: 12,
     fontWeight: '500',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
+    letterSpacing: 0.4,
     color: colors.textMuted,
+    textAlign: 'center',
   },
   divider: {
     alignSelf: 'stretch',
@@ -274,15 +258,8 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     marginBottom: 10,
   },
-  infoText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  stats: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: spacing.md,
-  },
+  infoText: { fontSize: 14, color: colors.textSecondary },
+  stats: { flexDirection: 'row', gap: 10, marginTop: spacing.md },
   stat: {
     flex: 1,
     backgroundColor: colors.surface,
@@ -303,7 +280,6 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     marginTop: 4,
     letterSpacing: 0.4,
-    textTransform: 'uppercase',
   },
   section: {
     marginTop: spacing.lg,
@@ -321,22 +297,14 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     marginBottom: 14,
   },
-  muted: {
-    fontSize: 13,
-    color: colors.textMuted,
-    lineHeight: 18,
-  },
+  muted: { fontSize: 13, color: colors.textMuted, lineHeight: 18 },
   subActive: {
     fontSize: 15,
     fontWeight: '600',
     color: colors.success,
     marginBottom: 6,
   },
-  chips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     borderWidth: 1,
     borderColor: colors.border,
@@ -345,11 +313,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     backgroundColor: colors.surfaceAlt,
   },
-  chipText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: colors.textSecondary,
-  },
+  chipText: { fontSize: 12, fontWeight: '500', color: colors.textSecondary },
   howRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -364,12 +328,7 @@ const styles = StyleSheet.create({
     width: 24,
     marginTop: 2,
   },
-  howText: {
-    flex: 1,
-    fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 20,
-  },
+  howText: { flex: 1, fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
   version: {
     textAlign: 'center',
     marginTop: spacing.xl,

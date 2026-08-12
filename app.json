@@ -39,7 +39,15 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "bundler": "metro"
+      "bundler": "metro",
+      "output": "single",
+      "name": "Mojster",
+      "shortName": "Mojster",
+      "lang": "en",
+      "themeColor": "#0A0A0A",
+      "backgroundColor": "#F3F2EF",
+      "display": "standalone",
+      "orientation": "portrait"
     },
     "plugins": [
       "expo-router",
@@ -53,7 +61,8 @@
       ]
     ],
     "experiments": {
-      "typedRoutes": false
+      "typedRoutes": false,
+      "baseUrl": "/mojster"
     },
     "extra": {
       "router": {

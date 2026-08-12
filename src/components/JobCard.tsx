@@ -3,6 +3,7 @@ import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { getCategoryById } from '../data/categories';
 import { Job } from '../data/types';
+import { useI18n } from '../i18n/I18nContext';
 import { formatRelative, statusLabel } from '../lib/format';
 import { colors, radius, spacing } from '../theme/colors';
 
@@ -13,6 +14,7 @@ type Props = {
 };
 
 export function JobCard({ job, onPress, offerCount }: Props) {
+  const { t } = useI18n();
   const cat = getCategoryById(job.categoryId);
 
   return (
@@ -35,9 +37,9 @@ export function JobCard({ job, onPress, offerCount }: Props) {
       <View style={styles.body}>
         <View style={styles.topRow}>
           <Text style={styles.category} numberOfLines={1}>
-            {cat?.name ?? 'Storitev'}
+            {cat?.name ?? t.service}
           </Text>
-          <Text style={styles.status}>{statusLabel(job.status)}</Text>
+          <Text style={styles.status}>{statusLabel(job.status, t)}</Text>
         </View>
 
         <Text style={styles.title} numberOfLines={2}>
@@ -52,13 +54,13 @@ export function JobCard({ job, onPress, offerCount }: Props) {
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.time}>{formatRelative(job.createdAt)}</Text>
+          <Text style={styles.time}>{formatRelative(job.createdAt, t)}</Text>
           {typeof offerCount === 'number' && offerCount > 0 ? (
             <Text style={styles.offers}>
-              {offerCount} {offerCount === 1 ? 'ponudba' : 'ponudb'}
+              {offerCount} {offerCount === 1 ? t.offer : t.offers}
             </Text>
           ) : (
-            <Text style={styles.dealHint}>Dogovor v app</Text>
+            <Text style={styles.dealHint}>{t.dealInApp}</Text>
           )}
         </View>
       </View>

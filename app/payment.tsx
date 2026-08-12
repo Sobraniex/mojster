@@ -16,11 +16,13 @@ import { Input } from '../src/components/Input';
 import { useApp } from '../src/context/AppContext';
 import { WORKER_PLANS } from '../src/data/plans';
 import { PlanId } from '../src/data/types';
+import { useI18n } from '../src/i18n/I18nContext';
 import { colors, radius, spacing } from '../src/theme/colors';
 
 export default function PaymentScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { t } = useI18n();
   const { currentUser, needsPayment, completePayment, logout, onboardingComplete } =
     useApp();
 
@@ -61,11 +63,11 @@ export default function PaymentScreen() {
 
   function validate() {
     const e: Record<string, string> = {};
-    if (!cardName.trim()) e.cardName = 'Vnesite ime na kartici';
+    if (!cardName.trim()) e.cardName = t.errCardName;
     const digits = cardNumber.replace(/\s/g, '');
-    if (digits.length < 16) e.cardNumber = 'Vnesite 16-mestno številko kartice';
-    if (!/^\d{2}\/\d{2}$/.test(expiry)) e.expiry = 'Oblika MM/LL';
-    if (cvc.replace(/\D/g, '').length < 3) e.cvc = '3-mestni CVC';
+    if (digits.length < 16) e.cardNumber = t.errCardNumber;
+    if (!/^\d{2}\/\d{2}$/.test(expiry)) e.expiry = t.errExpiry;
+    if (cvc.replace(/\D/g, '').length < 3) e.cvc = t.errCvc;
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -81,7 +83,7 @@ export default function PaymentScreen() {
       setDone(true);
       router.replace('/(tabs)');
     } catch {
-      setErrors({ cardNumber: 'Plačilo ni uspelo. Poskusite znova.' });
+      setErrors({ cardNumber: t.errPayment });
     } finally {
       setLoading(false);
     }
@@ -108,24 +110,41 @@ export default function PaymentScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.kicker}>PLAČILO · DOSTOP MOJSTRA</Text>
-        <Text style={styles.title}>Aktivirajte profil mojstra</Text>
+        <Text style={styles.kicker}>{t.paymentKicker}</Text>
+        <Text style={styles.title}>{t.paymentTitle}</Text>
         <Text style={styles.sub}>
-          Za iskanje del in pošiljanje ponudb je potrebna aktivna naročnina.
-          Stranke plačila ne potrebujejo.
+          {t.paymentSub}
         </Text>
 
         <View style={styles.userBox}>
-          <Text style={styles.userLabel}>PROFIL</Text>
+          <Text style={styles.userLabel}>{t.profileSection}</Text>
           <Text style={styles.userName}>
             {currentUser.firstName} {currentUser.lastName}
           </Text>
           <Text style={styles.userMeta}>{currentUser.email}</Text>
         </View>
 
-        <Text style={styles.section}>Izberite paket</Text>
+        <Text style={styles.section}>{t.choosePlan}</Text>
         {WORKER_PLANS.map((p) => {
           const on = planId === p.id;
+          const planName =
+            p.id === 'monthly'
+              ? t.planMonthly
+              : p.id === 'quarterly'
+                ? t.planQuarterly
+                : t.planYearly;
+          const badge =
+            p.id === 'quarterly'
+              ? t.badgePopular
+              : p.id === 'yearly'
+                ? t.badgeBest
+                : undefined;
+          const features =
+            p.id === 'monthly'
+              ? [t.feat1, t.feat2, t.feat3, t.feat4]
+              : p.id === 'quarterly'
+                ? [t.feat5, t.feat6, t.feat7]
+                : [t.feat8, t.feat9, t.feat10];
           return (
             <Pressable
               key={p.id}
@@ -136,23 +155,23 @@ export default function PaymentScreen() {
                 <View style={{ flex: 1 }}>
                   <View style={styles.planNameRow}>
                     <Text style={[styles.planName, on && styles.planNameOn]}>
-                      {p.name}
+                      {planName}
                     </Text>
-                    {p.badge ? (
+                    {badge ? (
                       <View style={styles.badge}>
-                        <Text style={styles.badgeText}>{p.badge}</Text>
+                        <Text style={styles.badgeText}>{badge}</Text>
                       </View>
                     ) : null}
                   </View>
                   <Text style={[styles.planPeriod, on && styles.planPeriodOn]}>
-                    {p.periodLabel.trim()} · ~{p.monthlyEquivalent.toFixed(0)} €/mes
+                    {t.perMonth.trim()} · ~{p.monthlyEquivalent.toFixed(0)} €
                   </Text>
                 </View>
                 <Text style={[styles.planPrice, on && styles.planPriceOn]}>
                   {p.priceEur} €
                 </Text>
               </View>
-              {p.features.map((f) => (
+              {features.map((f) => (
                 <Text key={f} style={[styles.feature, on && styles.featureOn]}>
                   · {f}
                 </Text>
@@ -162,14 +181,14 @@ export default function PaymentScreen() {
         })}
 
         <Text style={[styles.section, { marginTop: spacing.lg }]}>
-          Plačilna kartica
+          {t.paymentCard}
         </Text>
         <Text style={styles.secureNote}>
-          Demo plačilo (varno lokalno). V produkciji se poveže s Stripe.
+          {t.secureNote}
         </Text>
 
         <Input
-          label="Ime na kartici"
+          label={t.cardName}
           placeholder="JANEZ NOVAK"
           value={cardName}
           onChangeText={setCardName}
@@ -177,20 +196,20 @@ export default function PaymentScreen() {
           error={errors.cardName}
         />
         <Input
-          label="Številka kartice"
+          label={t.cardNumber}
           placeholder="4242 4242 4242 4242"
           value={cardNumber}
-          onChangeText={(t) => setCardNumber(formatCardNumber(t))}
+          onChangeText={(v) => setCardNumber(formatCardNumber(v))}
           keyboardType="number-pad"
           error={errors.cardNumber}
         />
         <View style={styles.row}>
           <View style={{ flex: 1 }}>
             <Input
-              label="Veljavnost"
+              label={t.expiry}
               placeholder="MM/LL"
               value={expiry}
-              onChangeText={(t) => setExpiry(formatExpiry(t))}
+              onChangeText={(v) => setExpiry(formatExpiry(v))}
               keyboardType="number-pad"
               error={errors.expiry}
             />
@@ -198,10 +217,10 @@ export default function PaymentScreen() {
           <View style={{ width: 12 }} />
           <View style={{ flex: 1 }}>
             <Input
-              label="CVC"
+              label={t.cvc}
               placeholder="123"
               value={cvc}
-              onChangeText={(t) => setCvc(t.replace(/\D/g, '').slice(0, 4))}
+              onChangeText={(v) => setCvc(v.replace(/\D/g, '').slice(0, 4))}
               keyboardType="number-pad"
               secureTextEntry
               error={errors.cvc}
@@ -210,7 +229,7 @@ export default function PaymentScreen() {
         </View>
 
         <View style={styles.summary}>
-          <Text style={styles.summaryLabel}>Skupaj za plačilo</Text>
+          <Text style={styles.summaryLabel}>{t.totalPay}</Text>
           <Text style={styles.summaryPrice}>
             {plan.priceEur},00 €
           </Text>
@@ -220,7 +239,7 @@ export default function PaymentScreen() {
         </View>
 
         <Button
-          title={loading ? 'Obdelava…' : `Plačaj ${plan.priceEur} €`}
+          title={loading ? t.processing : `${t.pay} ${plan.priceEur} €`}
           onPress={handlePay}
           loading={loading}
           fullWidth
@@ -229,12 +248,12 @@ export default function PaymentScreen() {
         {loading ? (
           <View style={styles.processing}>
             <ActivityIndicator color={colors.ink} />
-            <Text style={styles.processingText}>Preverjanje plačila…</Text>
+            <Text style={styles.processingText}>{t.checkingPayment}</Text>
           </View>
         ) : null}
 
         <Button
-          title="Prekliči in odjava"
+          title={t.cancelLogout}
           variant="ghost"
           onPress={handleCancel}
           fullWidth

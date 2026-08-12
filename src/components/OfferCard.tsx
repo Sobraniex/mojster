@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { Offer, User } from '../data/types';
+import { useI18n } from '../i18n/I18nContext';
 import { formatPrice, formatRelative, initials, statusLabel } from '../lib/format';
 import { colors, radius, spacing } from '../theme/colors';
 import { Button } from './Button';
@@ -13,6 +14,7 @@ type Props = {
 };
 
 export function OfferCard({ offer, worker, isOwner, onAccept, onReject }: Props) {
+  const { t } = useI18n();
   return (
     <View style={styles.card}>
       <View style={styles.header}>
@@ -23,14 +25,14 @@ export function OfferCard({ offer, worker, isOwner, onAccept, onReject }: Props)
         </View>
         <View style={styles.headerInfo}>
           <Text style={styles.name}>
-            {worker ? `${worker.firstName} ${worker.lastName}` : 'Mojster'}
+            {worker ? `${worker.firstName} ${worker.lastName}` : t.craftsman}
           </Text>
           {worker?.phone ? <Text style={styles.phone}>{worker.phone}</Text> : null}
-          <Text style={styles.time}>{formatRelative(offer.createdAt)}</Text>
+          <Text style={styles.time}>{formatRelative(offer.createdAt, t)}</Text>
         </View>
         <View style={styles.priceBlock}>
           <Text style={styles.price}>{formatPrice(offer.price)}</Text>
-          <Text style={styles.status}>{statusLabel(offer.status)}</Text>
+          <Text style={styles.status}>{statusLabel(offer.status, t)}</Text>
         </View>
       </View>
 
@@ -38,8 +40,8 @@ export function OfferCard({ offer, worker, isOwner, onAccept, onReject }: Props)
 
       {isOwner && offer.status === 'pending' && onAccept && onReject ? (
         <View style={styles.actions}>
-          <Button title="Zavrni" variant="outline" onPress={onReject} style={styles.btn} />
-          <Button title="Sprejmi" onPress={onAccept} style={styles.btn} />
+          <Button title={t.reject} variant="outline" onPress={onReject} style={styles.btn} />
+          <Button title={t.accept} onPress={onAccept} style={styles.btn} />
         </View>
       ) : null}
     </View>
